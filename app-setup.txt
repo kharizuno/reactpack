@@ -3,7 +3,7 @@ SETUP REACT
 - npm install express cors cross-env dotenv
 
 - replace to scripts in package.json 
-	"start": "node server.js",
+    "start": "node server.js",
     "start:staging": "cross-env NODE_ENV=staging npm run start",
     "start:production": "cross-env NODE_ENV=production npm run start",
     "server": "nodemon server.js",
@@ -53,7 +53,7 @@ SETUP REACT
 - mkdir config and create file .env.production / .env.staging
 
 - replace to scripts in client/package.json
-	"start": "react-app-env --env-file=config/.env.${BUILD_ENV} start",
+    "start": "react-app-env --env-file=config/.env.${BUILD_ENV} start",
     "start:staging": "BUILD_ENV=staging npm run start",
     "start:production": "BUILD_ENV=production npm run start",
     "build": "GENERATE_SOURCEMAP=false react-app-env --env-file=config/.env.${BUILD_ENV} build && rm -rf ../public && mv build ../public",
@@ -69,7 +69,7 @@ SETUP REACT
 	- import store, {history} from './store';
 	- replace ReactDOM.render with:
 		<Provider store={store}>
-    		<App history={history}/>
+            <App history={history}/>
   		</Provider>
 
 - create file routes.js in folder contains
