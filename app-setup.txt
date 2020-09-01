@@ -1,0 +1,80 @@
+SETUP REACT
+- npm init
+- npm install express cors cross-env dotenv
+
+- replace to scripts in package.json 
+	"start": "node server.js",
+    "start:staging": "cross-env NODE_ENV=staging npm run start",
+    "start:production": "cross-env NODE_ENV=production npm run start",
+    "server": "nodemon server.js",
+    "server:staging": "cross-env NODE_ENV=staging npm run server",
+    "server:production": "cross-env NODE_ENV=production npm run server",
+    "client-dev": "npm run build:staging --prefix client",
+    "client-live": "npm run start:production --prefix client",
+    "dev": "concurrently \"npm run server:staging\" \"npm run client-dev\"",
+    "live": "concurrently \"npm run server:production\" \"npm run client-live\""
+    
+- create file "server.js"
+	- load all npm
+	- dotenv.config({
+			path: path.resolve(__dirname, 'client/config/.env.' + process.env.NODE_ENV)
+		})
+	- app.use(cors())
+	- app.use(express.static('public'))
+	- app.get('*', (req, res) => {
+			res.sendFile(path.resolve(__dirname, 'public', 'index.html'))
+		})
+	- const PORT = process.env.PORT || 5000
+	- app.listen(PORT, () => console.log(`Server started on port ${PORT}`))
+	
+- npx create-react-app your-app
+- rename folder your-app to become client
+
+- create new folder in folder "src"
+	- api
+    - assets
+	- components
+	- constants
+	- contains
+	- helpers	
+	- redux
+		- actions
+		- reducers
+	- store
+	- style
+	- utils
+	
+- move file
+	- app.css, app.js, logo.svg (folder contains)
+	- index.css (folder style)
+	
+- npm install react-app-env react-router-dom react-redux react-router-redux 
+- npm install redux redux-await redux-thunk redux-logger redux-promise-middleware history
+- mkdir config and create file .env.production / .env.staging
+
+- replace to scripts in client/package.json
+	"start": "react-app-env --env-file=config/.env.${BUILD_ENV} start",
+    "start:staging": "BUILD_ENV=staging npm run start",
+    "start:production": "BUILD_ENV=production npm run start",
+    "build": "GENERATE_SOURCEMAP=false react-app-env --env-file=config/.env.${BUILD_ENV} build && rm -rf ../public && mv build ../public",
+    "build:staging": "BUILD_ENV=staging npm run build",
+    "build:production": "BUILD_ENV=production npm run build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+    
+- create file index.js in folder store
+- create file index.js in folder redux/reducers
+- edit file src/index.js
+	- import {Provider} from 'react-redux';
+	- import store, {history} from './store';
+	- replace ReactDOM.render with:
+		<Provider store={store}>
+    		<App history={history}/>
+  		</Provider>
+
+- create file routes.js in folder contains
+- setup code contains/app.js link with routes.js
+- npm install validator striptags stripchar crypto-js serialize-javascript isomorphic-fetch
+- npm install antd (optional)
+- setup code api/index.js (requestHeaders, requestUrl, callGet, Post, Put, Delete)
+- setup code helpers/index.js

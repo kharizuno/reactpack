@@ -1,0 +1,26 @@
+{
+  "name": "socindex-app",
+  "version": "1.0.0",
+  "description": "SocialIndex App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:staging": "cross-env NODE_ENV=staging npm run start",
+    "start:production": "cross-env NODE_ENV=production npm run start",
+    "server": "nodemon server.js",
+    "server:staging": "cross-env NODE_ENV=staging npm run server",
+    "server:production": "cross-env NODE_ENV=production npm run server",
+    "client-dev": "npm run build:staging --prefix client",
+    "client-live": "npm run start:production --prefix client",
+    "dev": "concurrently \"npm run server:staging\" \"npm run client-dev\"",
+    "live": "concurrently \"npm run server:production\" \"npm run client-live\""
+  },
+  "author": "kharizuno",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1"
+  }
+}
