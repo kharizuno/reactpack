@@ -55,5 +55,6 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "http://0.0.0.0:5000"
+  "homepage": "http://0.0.0.0:5000",
+  "devDependencies": {}
 }
