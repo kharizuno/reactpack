@@ -24,10 +24,14 @@ class App extends Component {
 					return (
 						<Router history={history} basename="/">
 							<Switch>
-								{routes.map((route, i) => (
-									<RouteWithSubRoutes key={i} {...route} />
-									// <Route key={i} {...route} />
-								))}
+								{
+									routes.map((route, i) => {
+										return (
+											<RouteWithSubRoutes key={i} {...route} />
+											// <Route key={i} {...route} />
+										)
+									})
+								}
 							</Switch>
 						</Router>
 					);
