@@ -1,96 +1,133 @@
-import * as helper from '../helpers';
-import * as ihttp from './initialHttp';
-import fetch from 'isomorphic-fetch';
+import axios from 'axios';
+import http from 'http';
+import https from 'https';
 import serialize from 'serialize-javascript';
 
 class HttpApi {
 
-    static requestHeaders() {
-        let token = helper.localStore('tokenize');
-        return {
-            'Access-Control-Allow-Origin': '*',
-            'AUTHORIZATION': (token) ? 'JWT '+token.access_token : ''
-        };
+    static requestHeaders(multipart) {
+        axios.defaults.headers.common['Authorization'] = '';
+
+        if (!multipart) axios.defaults.headers.post['Content-Type'] = 'application/json';
+        axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
     }
 
-    static requestUrl(acc, access) {
-        if(acc === 'development') {
-            switch(access) {
-                case 'phx':
-                    return ihttp.URL_PHOENIX_DEV;
-                case 'bin':
-                    return ihttp.URL_BINTARI_DEV;
-                default:
-                    return ihttp.URL_BINSOCX_DEV;
-            }
-        } else {
-            switch(access) {
-                case 'phx':
-                    return ihttp.URL_PHOENIX_PROD;
-                case 'bin':
-                    return ihttp.URL_BINTARI_PROD;
-                default:
-                    return ihttp.URL_BINSOCX_PROD;
-            }
+    static requestConfig(cancelToken) {
+        let config = {
+            httpAgent: new http.Agent({keepAlive: true}),
+            httpsAgent: new https.Agent({keepAlive: true})
+        }
+
+        if (cancelToken) Object.assign(config, {cancelToken: cancelToken})
+        return config;
+    }
+    
+    static requestUrl(access) {
+        switch(access) {
+            case 'site':
+                return process.env.REACT_APP_URL_SITE;
+            default:
+                return process.env.REACT_APP_URL_API;
         }
     }
 
-    static callGet(uri, data, access) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        const request = new Request(`${this.requestUrl(ihttp.API_ACCESS, access)}/${uri}${helper.objectString(data)}`, {
-            method: 'GET',
-            headers: headers
-        });
+    static callGet(uri, data, access, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        return fetch(request).then(response => {
-            return response.json();
-        }).catch(error => {
-            return error;
-        });
-    }
+        this.requestHeaders();
+        return axios.get(`${this.requestUrl(access)}/${uri}`, {params: data, cancelToken: cancelToken}, this.requestConfig())
+        .then(function (response) {
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
 
-    static callPost(uri, data, access) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        const request = new Request(`${this.requestUrl(ihttp.API_ACCESS, access)}/${uri}`, {
-            method: 'POST',
-            headers: headers,
-            body: serialize(data, {isJSON: true})
-        });
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
 
-        return fetch(request).then(response => {
-            return response.json();
-        }).catch(error => {
-            return error;
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 
-    static callPut(uri, data, access) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        const request = new Request(`${this.requestUrl(ihttp.API_ACCESS, access)}/${uri}`, {
-            method: 'PUT',
-            headers: headers,
-            body: serialize(data, {isJSON: true})
-        });
+    static callPost(uri, data, access, multipart, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        return fetch(request).then(response => {
-            return response.json();
-        }).catch(error => {
-            return error;
+        this.requestHeaders(multipart);
+        return axios.post(`${this.requestUrl(access)}/${uri}`, serialize(data, {isJSON: true}), this.requestConfig(cancelToken))
+        .then(function (response) {
+            if (multipart && multipart.progress === 100) {
+                // multipart.actprogress.loadProgress(false); 
+            }
+
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 
-    static callDelete(uri, data, access) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        const request = new Request(`${this.requestUrl(ihttp.API_ACCESS, access)}/${uri}`, {
-            method: 'DELETE',
-            headers: headers,
-            body: serialize(data, {isJSON: true})
-        });
+    static callPut(uri, data, access, multipart, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        return fetch(request).then(response => {
-            return response.json();
-        }).catch(error => {
-            return error;
+        this.requestHeaders(multipart);
+        return axios.put(`${this.requestUrl(access)}/${uri}`, serialize(data, {isJSON: true}), this.requestConfig(cancelToken))
+        .then(function (response) {
+            if (multipart && multipart.progress === 100) {
+                // multipart.actprogress.loadProgress(false); 
+            }
+
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
+        });
+    }
+
+    static callDelete(uri, data, access, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
+
+        this.requestHeaders();
+        return axios.delete(`${this.requestUrl(access)}/${uri}`, serialize(data, {isJSON: true}), this.requestConfig(cancelToken))
+        .then(function (response) {
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 }

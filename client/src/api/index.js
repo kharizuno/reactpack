@@ -1,103 +1,133 @@
-import * as helper from '../helpers';
-import fetch from 'isomorphic-fetch';
+import axios from 'axios';
+import http from 'http';
+import https from 'https';
 import serialize from 'serialize-javascript';
 
 class HttpApi {
 
-    static requestHeaders() {
-        return {
-            'Access-Control-Allow-Origin': '*',
-            'Authorization': ''
-        };
+    static requestHeaders(multipart) {
+        axios.defaults.headers.common['Authorization'] = '';
+
+        if (!multipart) axios.defaults.headers.post['Content-Type'] = 'application/json';
+        axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
     }
 
+    static requestConfig(cancelToken) {
+        let config = {
+            httpAgent: new http.Agent({keepAlive: true}),
+            httpsAgent: new https.Agent({keepAlive: true})
+        }
+
+        if (cancelToken) Object.assign(config, {cancelToken: cancelToken})
+        return config;
+    }
+    
     static requestUrl(access) {
         switch(access) {
+            case 'site':
+                return process.env.REACT_APP_URL_SITE;
             default:
                 return process.env.REACT_APP_URL_API;
         }
     }
 
-    static callGet(uri, data, access) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        const request = new Request(`${this.requestUrl(access)}/${uri}${helper.objectString(data)}`, {
-            method: 'GET',
-            headers: headers
-        });
+    static callGet(uri, data, access, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        return fetch(request).then(response => {
-            return response.json();
-        }).catch(error => {
-            return {error: true, message: error};
+        this.requestHeaders();
+        return axios.get(`${this.requestUrl(access)}/${uri}`, {params: data, cancelToken: cancelToken}, this.requestConfig())
+        .then(function (response) {
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 
-    static callPost(uri, data, access, multipart) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        if (multipart) delete headers['Content-Type'];
-        
-        const request = new Request(`${this.requestUrl(access)}/${uri}`, {
-            method: 'POST',
-            headers: headers,
-            body: (multipart) ? data : serialize(data, {isJSON: true}),
-            progress: (e) => { 
-                if (multipart) {
-                    console.log(`Progress: ${e.loaded/e.total}%`);
-                    // multipart.actprogress.loadProgress(e.loaded/e.total); 
-                }
-            }
-        });
+    static callPost(uri, data, access, multipart, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        return fetch(request).then(response => {
+        this.requestHeaders(multipart);
+        return axios.post(`${this.requestUrl(access)}/${uri}`, serialize(data, {isJSON: true}), this.requestConfig(cancelToken))
+        .then(function (response) {
             if (multipart && multipart.progress === 100) {
                 // multipart.actprogress.loadProgress(false); 
             }
 
-            return response.json();
-        }).catch(error => {
-            return {error: true, message: error};
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 
-    static callPut(uri, data, access, multipart) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        if (multipart) delete headers['Content-Type'];
+    static callPut(uri, data, access, multipart, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        const request = new Request(`${this.requestUrl(access)}/${uri}`, {
-            method: 'PUT',
-            headers: headers,
-            body: (multipart) ? data : serialize(data, {isJSON: true}),
-            progress: (e) => { 
-                if (multipart) {
-                    console.log(`Progress: ${e.loaded/e.total}%`);
-                    // multipart.actprogress.loadProgress(e.loaded/e.total); 
-                }
-            }
-        });
-
-        return fetch(request).then(response => {
+        this.requestHeaders(multipart);
+        return axios.put(`${this.requestUrl(access)}/${uri}`, serialize(data, {isJSON: true}), this.requestConfig(cancelToken))
+        .then(function (response) {
             if (multipart && multipart.progress === 100) {
                 // multipart.actprogress.loadProgress(false); 
             }
 
-            return response.json();
-        }).catch(error => {
-            return {error: true, message: error};
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 
-    static callDelete(uri, data, access) {
-        const headers = Object.assign({'Content-Type': 'application/json'}, this.requestHeaders());
-        const request = new Request(`${this.requestUrl(access)}/${uri}`, {
-            method: 'DELETE',
-            headers: headers,
-            body: serialize(data, {isJSON: true})
-        });
+    static callDelete(uri, data, access, cancelToken) {
+        cancelToken = (cancelToken) ? cancelToken.token : '';
 
-        return fetch(request).then(response => {
-            return response.json();
-        }).catch(error => {
-            return {error: true, message: error};
+        this.requestHeaders();
+        return axios.delete(`${this.requestUrl(access)}/${uri}`, serialize(data, {isJSON: true}), this.requestConfig(cancelToken))
+        .then(function (response) {
+            return response.data;
+        })
+        .catch(function (error) {
+            let msg = {error: true, message: error.message};
+            if (error.response.data) Object.assign(msg, error.response.data);
+
+            if (axios.isCancel(error)) {
+                Object.assign(msg, {unmount: true});
+
+                if (process.env.NODE_ENV === 'development')
+                console.log("Request cancelled", error.message);
+            }
+
+            return msg;
         });
     }
 }
